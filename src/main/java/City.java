@@ -3,6 +3,8 @@
  */
 import jdk.nashorn.internal.objects.annotations.Constructor;
 import lombok.*;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
@@ -25,7 +27,7 @@ public class City {
 
 
 
-
+    @SneakyThrows
     public static City parse(Element city) {
         Elements info = city.select("td");
         if (info.size() == INFO_SIZE) {
@@ -48,6 +50,24 @@ public class City {
             myCity.setYearOfFound(anchor.attr("title"));
 
             myCity.setArea(Double.parseDouble(info.get(5).ownText()));
+
+            // Now most complicated (almost) - getting coordinates:
+            String myUrl = String.format("https://uk.wikipedia.org%s",
+                    info.get(1).select("a").get(0).attr("href"));
+            // Creating document:
+            Document doc = Jsoup.connect(myUrl).get();
+
+            // Getting values (plus catching exception):
+            try {
+                // Selecting .geo:
+                Element geo = doc.select(".geo").get(0);
+                String coords = geo.ownText();
+                String[] parts = coords.split("; ");
+                myCity.setCoordinates(new Coordinates(Double.parseDouble(parts[0]), Double.parseDouble(parts[1])));
+            } catch (IndexOutOfBoundsException e1) {
+                // If there are no coordinates on page:
+                myCity.setCoordinates(0);
+            }
 
             //TODO  set all other attributes
             return myCity;
@@ -81,6 +101,10 @@ public class City {
 
     public void setCoordinates(Coordinates newCoordinates) {
         coordinates = newCoordinates;
+    }
+
+    public void setCoordinates(int i) {
+        coordinates = null;
     }
 
 }

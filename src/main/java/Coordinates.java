@@ -5,6 +5,7 @@ import javax.xml.bind.Element;
 
 
 //TODO Create class that represents coordinates
+@ToString
 public class Coordinates {
     private double lat;
     private double lon;
